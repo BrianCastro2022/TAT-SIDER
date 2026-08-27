@@ -27,7 +27,7 @@
     --radius:10px;
   }
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;}
   body{
     background:
       radial-gradient(1200px 600px at 100% -10%, rgba(52,211,201,.06), transparent 60%),
@@ -35,17 +35,23 @@
       var(--bg);
     color:var(--text);
     font-family:'Inter',system-ui,sans-serif;
-    min-height:100vh;
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    position:relative;
+    font-size:clamp(12px, 1.15vw, 20px);
   }
   .mono{font-family:'JetBrains Mono',monospace;}
   .display{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.03em;}
 
   header{
     position:relative;
-    padding:18px 26px;
+    flex:0 0 auto;
+    padding:clamp(8px,1.1vh,16px) clamp(14px,2vw,28px);
     background:linear-gradient(180deg,#12161c,#0e1116 90%);
     border-bottom:1px solid var(--border);
-    display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+    display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:nowrap;
     overflow:hidden;
   }
   header::before{
@@ -65,43 +71,51 @@
     70%{box-shadow:0 0 0 9px rgba(52,211,201,0);}
     100%{box-shadow:0 0 0 0 rgba(52,211,201,0);}
   }
-  .brand h1{margin:2px 0 0;font-size:26px;font-weight:700;}
-  .brand .sub{color:var(--muted);font-size:13px;margin-top:2px;}
-  .clock{font-size:22px;font-weight:600;letter-spacing:.03em;color:var(--text);}
-  .clock small{display:block;color:var(--muted);font-size:11px;font-family:'Inter';letter-spacing:.08em;text-transform:uppercase;}
+  .brand h1{margin:2px 0 0;font-size:clamp(18px,1.9vw,34px);font-weight:700;line-height:1.05;}
+  .brand .sub{color:var(--muted);font-size:clamp(10px,.85vw,15px);margin-top:2px;}
+  .clock{font-size:clamp(16px,1.7vw,30px);font-weight:600;letter-spacing:.03em;color:var(--text);text-align:right;flex:0 0 auto;}
+  .clock small{display:block;color:var(--muted);font-size:clamp(9px,.65vw,13px);font-family:'Inter';letter-spacing:.08em;text-transform:uppercase;}
 
-  main{padding:22px 26px 40px;max-width:1400px;margin:0 auto;}
-  .grid{display:grid;grid-template-columns:2fr 1fr;gap:18px;align-items:start;}
-  @media (max-width:980px){.grid{grid-template-columns:1fr;}}
+  main{
+    flex:1 1 auto;min-height:0;
+    padding:clamp(10px,1.4vh,22px) clamp(14px,2vw,28px);
+    display:grid;
+    grid-template-rows:auto minmax(0,1.35fr) minmax(0,1fr);
+    gap:clamp(8px,1.2vh,18px);
+    overflow:hidden;
+  }
+  .grid{display:grid;grid-template-columns:2fr 1fr;gap:clamp(8px,1vw,18px);align-items:stretch;min-height:0;}
 
   .card{
     background:var(--panel);
     border:1px solid var(--border);
     border-radius:var(--radius);
-    padding:18px 18px 14px;
+    padding:clamp(10px,1.3vh,18px);
+    display:flex;flex-direction:column;min-height:0;overflow:hidden;
   }
   .card h2{
-    margin:0 0 12px;font-size:14px;color:var(--muted);
-    letter-spacing:.1em;font-weight:600;display:flex;align-items:center;justify-content:space-between;
+    margin:0 0 clamp(6px,1vh,12px);font-size:clamp(11px,.95vw,16px);color:var(--muted);
+    letter-spacing:.1em;font-weight:600;display:flex;align-items:center;justify-content:space-between;flex:0 0 auto;
   }
-  .chart-wrap{position:relative;height:360px;}
+  .chart-wrap{position:relative;flex:1 1 auto;min-height:0;}
 
-  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
-  @media (max-width:700px){.kpis{grid-template-columns:repeat(2,1fr);}}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(6px,.8vw,12px);}
   .kpi{
     background:var(--panel-alt);border:1px solid var(--border);border-radius:8px;
-    padding:12px 14px;
+    padding:clamp(8px,1.1vh,14px);
   }
-  .kpi .label{font-size:11px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;}
-  .kpi .value{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;margin-top:4px;}
+  .kpi .label{font-size:clamp(9px,.7vw,13px);color:var(--muted);letter-spacing:.06em;text-transform:uppercase;}
+  .kpi .value{font-family:'JetBrains Mono',monospace;font-size:clamp(16px,1.7vw,30px);font-weight:700;margin-top:4px;}
   .kpi .value.green{color:var(--green);}
   .kpi .value.yellow{color:var(--yellow);}
   .kpi .value.red{color:var(--red);}
 
-  .voice-panel{display:flex;flex-direction:column;gap:14px;}
+  .voice-panel{gap:clamp(8px,1.1vh,14px);}
+  .voice-panel > *{flex:0 0 auto;}
+  .voice-panel .log-block{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;}
   .talker-status{
     display:flex;align-items:center;gap:12px;
-    background:var(--panel-alt);border:1px solid var(--border);border-radius:8px;padding:12px 14px;
+    background:var(--panel-alt);border:1px solid var(--border);border-radius:8px;padding:clamp(8px,1.1vh,14px);
   }
   .vu{display:flex;align-items:flex-end;gap:3px;height:22px;}
   .vu span{width:4px;background:var(--cyan);border-radius:2px;height:6px;opacity:.35;transition:height .12s,opacity .12s;}
@@ -128,13 +142,13 @@
   .btn-row{display:flex;gap:8px;flex-wrap:wrap;}
 
   .log{
-    list-style:none;margin:0;padding:0;max-height:220px;overflow-y:auto;
+    list-style:none;margin:0;padding:0;flex:1 1 auto;min-height:0;overflow:hidden;
     display:flex;flex-direction:column;gap:6px;
   }
   .log li{
-    font-size:12.5px;background:var(--panel-alt);border:1px solid var(--border);
-    border-left:3px solid var(--muted);border-radius:6px;padding:8px 10px;
-    display:flex;justify-content:space-between;gap:10px;
+    font-size:clamp(10px,.85vw,15px);background:var(--panel-alt);border:1px solid var(--border);
+    border-left:3px solid var(--muted);border-radius:6px;padding:clamp(4px,.7vh,8px) 10px;
+    display:flex;justify-content:space-between;gap:10px;flex:0 0 auto;
   }
   .log li.green{border-left-color:var(--green);}
   .log li.yellow{border-left-color:var(--yellow);}
@@ -155,24 +169,26 @@
   .zona.preventiva b{color:#e8c437;}
   .zona ul{margin:4px 0 0;padding-left:16px;}
 
-  table{width:100%;border-collapse:collapse;font-size:13px;}
+  table{width:100%;border-collapse:collapse;font-size:clamp(11px,1vw,18px);}
   thead th{
-    text-align:left;color:var(--muted);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
-    padding:8px 10px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--panel);
+    text-align:left;color:var(--muted);font-size:clamp(9px,.75vw,13px);letter-spacing:.08em;text-transform:uppercase;
+    padding:clamp(4px,.7vh,8px) 10px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--panel);
   }
-  tbody td{padding:7px 10px;border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;}
+  tbody td{padding:clamp(3px,.55vh,8px) 10px;border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;}
   tbody tr.green td.tatcell{color:var(--green);font-weight:700;}
   tbody tr.yellow td.tatcell{color:var(--yellow);font-weight:700;}
   tbody tr.red td.tatcell{color:var(--red);font-weight:700;}
-  .table-wrap{max-height:340px;overflow-y:auto;}
+  .table-wrap{flex:1 1 auto;min-height:0;overflow:hidden;}
+  table{table-layout:fixed;}
 
   .banner{
     display:none;align-items:flex-start;gap:10px;background:var(--red-bg);
-    border:1px solid rgba(224,57,43,.4);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;
+    border:1px solid rgba(224,57,43,.4);border-radius:8px;padding:12px 14px;font-size:13px;
+    position:absolute;left:clamp(14px,2vw,28px);right:clamp(14px,2vw,28px);
+    bottom:clamp(10px,1.4vh,22px);z-index:20;box-shadow:0 8px 30px rgba(0,0,0,.5);
   }
   .banner.show{display:flex;}
   .banner b{color:var(--red);}
-  footer{color:var(--muted);font-size:11.5px;text-align:center;padding:20px;}
   a{color:var(--cyan);}
 </style>
 </head>
@@ -182,7 +198,7 @@
   <div class="brand">
     <div class="eyebrow"><span class="dot" id="statusDot"></span><span id="statusText">CONECTANDO…</span></div>
     <h1 class="display">Workstation — TAT Sider</h1>
-    <div class="sub">Seguimiento en vivo desde la puerta hasta que sale · Hoja "SIC SIDER"</div>
+    <div class="sub">Seguimiento en vivo desde la puerta hasta que sale · Hoja "SIC SIDER - Desarrollado por Ingeniero Brian Castro"</div>
   </div>
   <div class="clock">
     <small>Hora local</small>
@@ -204,7 +220,7 @@
     <div class="kpi"><div class="label">Registros hoy</div><div class="value" id="kpiTotal">—</div></div>
     <div class="kpi"><div class="label">Cumplimiento (&lt; 75 min)</div><div class="value" id="kpiCumpl">—</div></div>
     <div class="kpi"><div class="label">TAT promedio</div><div class="value" id="kpiProm">—</div></div>
-    <div class="kpi"><div class="label">Última lectura</div><div class="value" id="kpiUltima" style="font-size:15px;">—</div></div>
+    <div class="kpi"><div class="label">Última lectura</div><div class="value" id="kpiUltima" style="font-size:clamp(12px,1.05vw,20px);">—</div></div>
   </div>
 
   <div class="grid">
@@ -214,20 +230,18 @@
     </div>
 
     <div class="card voice-panel">
-      <h2>Talker <span id="lastUpdate" class="mono" style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted);font-size:11px;"></span></h2>
+      <h2>Talker <span id="lastUpdate" class="mono" style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted);font-size:clamp(9px,.65vw,12px);"></span></h2>
 
       <div class="talker-status">
         <div class="vu" id="vu"><span></span><span></span><span></span><span></span><span></span></div>
-        <div class="txt" id="talkerTxt">Voz <b>desactivada</b>. Actívala para escuchar el resumen completo cada 3 minutos.</div>
+        <div class="txt" id="talkerTxt">Voz <b>activada</b>. Lee el resumen completo cada 3 minutos.</div>
       </div>
 
       <div class="btn-row">
-        <button class="btn primary" id="btnEnable">🔊 Activar voz</button>
-        <button class="btn ghost" id="btnMute" disabled>🔇 Silenciar</button>
-        <button class="btn ghost" id="btnReadNow" disabled>↻ Leer ahora</button>
+        <button class="btn primary" id="btnReadNow">↻ Leer ahora</button>
       </div>
 
-      <div>
+      <div class="log-block">
         <h2 style="margin-top:6px;">Registros anunciados</h2>
         <ul class="log" id="log"><li class="empty">Aún no hay anuncios en esta sesión.</li></ul>
       </div>
@@ -255,7 +269,7 @@
     </div>
   </div>
 
-  <div class="card" style="margin-top:18px;">
+  <div class="card">
     <h2>Detalle por hora</h2>
     <div class="table-wrap">
       <table>
@@ -266,10 +280,6 @@
   </div>
 
 </main>
-
-<footer>
-  Datos leídos en vivo desde Google Sheets · La hoja debe estar compartida como "Cualquier persona con el enlace puede ver" para que el navegador pueda consultarla.
-</footer>
 
 <script>
 // ---------- CONFIG ----------
@@ -283,8 +293,10 @@ const ZONES = { green: 60, yellow: 75, max: 120 };
 // ---------- STATE ----------
 let latestRows = [];
 let readoutTimer = null;
-let voiceEnabled = false;
+let voiceEnabled = true;   // la voz siempre está activa
 let muted = false;
+let voiceUnlocked = false;
+let firstReadoutDone = false;
 let speechQueue = [];
 let speaking = false;
 let chart = null;
@@ -426,26 +438,35 @@ function addLogEntry(row, zone){
   while(list.children.length > 60) list.removeChild(list.lastChild);
 }
 
-document.getElementById('btnEnable').addEventListener('click', () => {
-  voiceEnabled = true;
-  // "desbloquea" el motor de voz con un gesto de usuario
-  const unlock = new SpeechSynthesisUtterance(' ');
-  speechSynthesis.speak(unlock);
-  document.getElementById('btnEnable').disabled = true;
-  document.getElementById('btnEnable').textContent = '🔊 Voz activada';
-  document.getElementById('btnMute').disabled = false;
-  document.getElementById('btnReadNow').disabled = false;
-  document.getElementById('talkerTxt').innerHTML = `Voz <b>activada</b>. Leyendo la tabla completa…`;
-  startReadoutTimer();
+// ---------- VOZ SIEMPRE ACTIVA ----------
+function unlockVoice(){
+  if(voiceUnlocked || !('speechSynthesis' in window)) return;
+  voiceUnlocked = true;
+  try{
+    speechSynthesis.resume();
+    const u = new SpeechSynthesisUtterance(' ');
+    u.volume = 0; speechSynthesis.speak(u);
+  }catch(e){}
+  document.getElementById('talkerTxt').innerHTML = `Voz <b>activada</b>. Lee el resumen completo cada 3 minutos.`;
+}
+
+// Intenta arrancar la voz sola; si el navegador exige un gesto,
+// cualquier interacción (clic, tecla, toque, mando de la TV) la desbloquea.
+['click','keydown','touchstart','pointerdown','mousemove'].forEach(evt =>
+  window.addEventListener(evt, unlockVoice, { once:false, passive:true })
+);
+window.addEventListener('load', unlockVoice);
+document.addEventListener('visibilitychange', () => {
+  if(!document.hidden) unlockVoice();
 });
 
-document.getElementById('btnMute').addEventListener('click', (e) => {
-  muted = !muted;
-  e.target.textContent = muted ? '🔊 Reactivar' : '🔇 Silenciar';
-  if(muted){ speechSynthesis.cancel(); speechQueue=[]; speaking=false; setVU(false); }
-});
+// Chrome pausa speechSynthesis en colas largas: lo mantenemos vivo.
+setInterval(() => {
+  if(voiceEnabled && !muted && speechSynthesis.speaking) speechSynthesis.resume();
+}, 5000);
 
 document.getElementById('btnReadNow').addEventListener('click', () => {
+  unlockVoice();
   runFullReadout();
 });
 
@@ -577,6 +598,12 @@ async function fetchData(){
     document.getElementById('lastUpdate').textContent =
       '· actualizado ' + new Date().toLocaleTimeString('es-CO',{hour12:false});
     setStatus(true, 'EN VIVO');
+    // primera lectura en voz alta apenas llegan datos
+    if(voiceEnabled && !firstReadoutDone && rows.some(r => r.tat !== null && !isNaN(r.tat))){
+      firstReadoutDone = true;
+      startReadoutTimer();
+      runFullReadout();
+    }
   }catch(err){
     setStatus(false, 'SIN CONEXIÓN');
     document.getElementById('errorDetail').textContent =
