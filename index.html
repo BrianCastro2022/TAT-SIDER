@@ -464,13 +464,25 @@ document.getElementById('btnReadNow').addEventListener('click', () => {
 function startTableAutoScroll(){
   const wrap = document.querySelector('.table-wrap');
   if(!wrap) return;
-  let pause = 60;   // ~2.4 s de pausa al inicio de cada recorrido
+  let pause = 60;        // pausa (en ticks de 40 ms) al llegar arriba
+  let atBottomFor = 0;   // ticks que llevamos pegados al fondo
   setInterval(() => {
     const max = wrap.scrollHeight - wrap.clientHeight;
-    if(max <= 1){ wrap.scrollTop = 0; return; }   // cabe todo: sin scroll
+    if(max <= 2){ wrap.scrollTop = 0; return; }   // cabe todo: sin scroll
     if(pause > 0){ pause--; return; }
-    wrap.scrollTop += 1;
-    if(wrap.scrollTop >= max){ wrap.scrollTop = 0; pause = 80; }   // vuelve arriba y espera
+
+    // ¿ya estamos en el fondo? (con tolerancia por redondeo de píxeles)
+    if(wrap.scrollTop >= max - 2){
+      atBottomFor++;
+      if(atBottomFor >= 50){          // ~2 s abajo -> vuelve arriba
+        wrap.scrollTop = 0;
+        atBottomFor = 0;
+        pause = 80;                   // ~3 s arriba antes de bajar otra vez
+      }
+      return;
+    }
+    atBottomFor = 0;
+    wrap.scrollTop = Math.min(wrap.scrollTop + 1, max);
   }, 40);
 }
 window.addEventListener('load', startTableAutoScroll);
