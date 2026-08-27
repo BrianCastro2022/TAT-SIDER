@@ -156,19 +156,6 @@
   .log li .t{color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11px;white-space:nowrap;}
   .log .empty{color:var(--muted);font-size:12.5px;padding:8px 2px;}
 
-  details.acciones{margin-top:4px;}
-  details.acciones summary{
-    cursor:pointer;font-size:13px;color:var(--muted);font-weight:600;letter-spacing:.05em;
-    text-transform:uppercase;padding:6px 0;
-  }
-  .zona{border-radius:8px;padding:10px 12px;margin-top:8px;font-size:12.5px;line-height:1.5;}
-  .zona.reactiva{background:var(--red-bg);border:1px solid rgba(224,57,43,.35);}
-  .zona.preventiva{background:var(--yellow-bg);border:1px solid rgba(242,183,5,.35);}
-  .zona b{display:block;margin-bottom:4px;}
-  .zona.reactiva b{color:var(--red);}
-  .zona.preventiva b{color:#e8c437;}
-  .zona ul{margin:4px 0 0;padding-left:16px;}
-
   table{width:100%;border-collapse:collapse;font-size:clamp(11px,1vw,18px);}
   thead th{
     text-align:left;color:var(--muted);font-size:clamp(9px,.75vw,13px);letter-spacing:.08em;text-transform:uppercase;
@@ -245,27 +232,6 @@
         <h2 style="margin-top:6px;">Registros anunciados</h2>
         <ul class="log" id="log"><li class="empty">Aún no hay anuncios en esta sesión.</li></ul>
       </div>
-
-      <details class="acciones">
-        <summary>Guía de acciones por zona</summary>
-        <div class="zona reactiva">
-          <b>Zona reactiva (rojo · ≥ 75 min)</b>
-          <ul>
-            <li>Un sider por hora según el tiempo de atención destinado.</li>
-            <li>Pedir apoyo del segundo operario de montacargas.</li>
-            <li>Programar con anticipación la atención de recargues.</li>
-            <li>Registrar en el archivo de seguimiento si el incumplimiento es por falla del sistema.</li>
-          </ul>
-        </div>
-        <div class="zona preventiva">
-          <b>Zona preventiva (amarillo · 60–75 min)</b>
-          <ul>
-            <li>Ingresar un sider por hora según capacidad del CD.</li>
-            <li>Pre-alistar estibas antes del despacho.</li>
-            <li>Repartir el despacho entre varios siders.</li>
-          </ul>
-        </div>
-      </details>
     </div>
   </div>
 
@@ -286,7 +252,7 @@
 const SHEET_ID = '1asyzIGm7rjXzfE9WjG-9n5qGDUv5umXZOH_g4khC92I';
 const GID_SIC_SIDER = '1504577924';
 const POLL_MS = 20000;
-const READOUT_MS = 3 * 60 * 1000;
+const READOUT_MS = 5 * 60 * 1000;   // lectura completa cada 5 minutos
 let gvizCounter = 0;
 const ZONES = { green: 60, yellow: 75, max: 120 };
 
@@ -297,6 +263,7 @@ let voiceEnabled = true;   // la voz siempre está activa
 let muted = false;
 let voiceUnlocked = false;
 let firstReadoutDone = false;
+let prevRowMap = null;   // snapshot anterior para detectar registros nuevos / cambiados
 let speechQueue = [];
 let speaking = false;
 let chart = null;
@@ -403,10 +370,33 @@ function setVU(on){
 
 function updateWaitingMessage(){
   if(!voiceEnabled) return;
-  document.getElementById('talkerTxt').innerHTML = `Voz <b>activada</b>. Próxima lectura completa en ~3 min.`;
+  document.getElementById('talkerTxt').innerHTML = `Voz <b>activada</b>. Próxima lectura completa en ~5 min.`;
 }
 
-// Lee TODA la tabla (placa, hora, TAT Sider) — sin la columna ACUMULADO — cada 3 minutos
+// Anuncia solo lo que cambió desde la última consulta (nuevo registro o TAT modificado)
+function rowKey(r){ return (r.placa || '') + '|' + r.hora; }
+
+function announceChanges(rows){
+  const withData = rows.filter(r => r.tat !== null && !isNaN(r.tat));
+  const newMap = new Map(withData.map(r => [rowKey(r), r]));
+  if(prevRowMap === null){ prevRowMap = newMap; return; } // primera carga: la lee runFullReadout
+  const changes = [];
+  newMap.forEach((r, k) => {
+    const prev = prevRowMap.get(k);
+    if(!prev) changes.push({ row:r, tipo:'nuevo' });
+    else if(prev.tat !== r.tat) changes.push({ row:r, tipo:'cambio' });
+  });
+  prevRowMap = newMap;
+  if(!changes.length || !voiceEnabled || muted) return;
+  changes.forEach(({ row, tipo }) => {
+    const prefix = tipo === 'nuevo' ? 'Nuevo registro. ' : 'Registro actualizado. ';
+    speechQueue.push({ phrase: prefix + buildPhrase(row) });
+    addLogEntry(row, zoneOf(row.tat));
+  });
+  speakNext();
+}
+
+// Lee TODA la tabla (placa, hora, TAT Sider) — sin la columna ACUMULADO — cada 5 minutos
 function runFullReadout(){
   if(!voiceEnabled || muted) return;
   speechSynthesis.cancel();
@@ -447,7 +437,7 @@ function unlockVoice(){
     const u = new SpeechSynthesisUtterance(' ');
     u.volume = 0; speechSynthesis.speak(u);
   }catch(e){}
-  document.getElementById('talkerTxt').innerHTML = `Voz <b>activada</b>. Lee el resumen completo cada 3 minutos.`;
+  document.getElementById('talkerTxt').innerHTML = `Voz <b>activada</b>. Anuncia cada cambio y lee el resumen completo cada 5 minutos.`;
 }
 
 // Intenta arrancar la voz sola; si el navegador exige un gesto,
@@ -469,6 +459,21 @@ document.getElementById('btnReadNow').addEventListener('click', () => {
   unlockVoice();
   runFullReadout();
 });
+
+// ---------- AUTOSCROLL TABLA (arriba -> abajo, en bucle) ----------
+function startTableAutoScroll(){
+  const wrap = document.querySelector('.table-wrap');
+  if(!wrap) return;
+  let pause = 60;   // ~2.4 s de pausa al inicio de cada recorrido
+  setInterval(() => {
+    const max = wrap.scrollHeight - wrap.clientHeight;
+    if(max <= 1){ wrap.scrollTop = 0; return; }   // cabe todo: sin scroll
+    if(pause > 0){ pause--; return; }
+    wrap.scrollTop += 1;
+    if(wrap.scrollTop >= max){ wrap.scrollTop = 0; pause = 80; }   // vuelve arriba y espera
+  }, 40);
+}
+window.addEventListener('load', startTableAutoScroll);
 
 // ---------- CHART ----------
 const zoneBandsPlugin = {
@@ -603,6 +608,12 @@ async function fetchData(){
       firstReadoutDone = true;
       startReadoutTimer();
       runFullReadout();
+      prevRowMap = new Map(
+        rows.filter(r => r.tat !== null && !isNaN(r.tat)).map(r => [rowKey(r), r])
+      );
+    } else {
+      // en las siguientes consultas, anuncia solo lo nuevo o lo que cambió
+      announceChanges(rows);
     }
   }catch(err){
     setStatus(false, 'SIN CONEXIÓN');
